@@ -3,29 +3,31 @@ import matplotlib.pyplot as plt
 from ipywidgets import interact, fixed
 from IPython.display import clear_output
 
+
 def display_images(im_ref_z, im_mov_z, fixed_npa, moving_npa):
     # Create a figure with two subplots and the specified size.
-    plt.subplots(1,2,figsize=(10,8))
+    plt.subplots(1, 2, figsize=(10, 8))
 
     # Draw the fixed image in the first subplot.
-    plt.subplot(1,2,1)
-    plt.imshow(fixed_npa[im_ref_z,:,:],cmap=plt.cm.Greys_r);
+    plt.subplot(1, 2, 1)
+    plt.imshow(fixed_npa[im_ref_z, :, :], cmap=plt.cm.Greys_r)
     plt.title('fixed image')
     plt.axis('off')
 
     # Draw the moving image in the second subplot.
-    plt.subplot(1,2,2)
-    plt.imshow(moving_npa[im_mov_z,:,:],cmap=plt.cm.Greys_r);
+    plt.subplot(1, 2, 2)
+    plt.imshow(moving_npa[im_mov_z, :, :], cmap=plt.cm.Greys_r)
     plt.title('moving image')
     plt.axis('off')
 
     plt.show()
 
+
 # Callback invoked by the IPython interact method for scrolling and modifying the alpha blending
 # of an image stack of two images that occupy the same physical space.
 def display_images_with_alpha(image_z, alpha, fixed, moving):
-    img = (1.0 - alpha)*fixed[:,:,image_z] + alpha*moving[:,:,image_z]
-    plt.imshow(sitk.GetArrayViewFromImage(img),cmap=plt.cm.Greys_r);
+    img = (1.0 - alpha) * fixed[:, :, image_z] + alpha * moving[:, :, image_z]
+    plt.imshow(sitk.GetArrayViewFromImage(img), cmap=plt.cm.Greys_r)
     plt.axis('off')
     # plt.show()
 
@@ -36,6 +38,7 @@ def start_plot():
     metric_values = []
     multires_iterations = []
 
+
 # Callback invoked when the EndEvent happens, do cleanup of data and figure.
 def end_plot():
     global metric_values, multires_iterations
@@ -44,6 +47,7 @@ def end_plot():
     del multires_iterations
     # Close figure, we don't want to get a duplicate of the plot latter on.
     # plt.close()
+
 
 # Callback invoked when the IterationEvent happens, update our data and display new figure.
 def plot_values(registration_method):
@@ -61,11 +65,13 @@ def plot_values(registration_method):
     # plt.show()
     plt.pause(0.05)
 
+
 # Callback invoked when the sitkMultiResolutionIterationEvent happens, update the index into the
 # metric_values list.
 def update_multires_iterations():
     global metric_values, multires_iterations
     multires_iterations.append(len(metric_values))
+
 
 def est_lin_transf(im_ref, im_mov):
     """
@@ -94,8 +100,8 @@ def est_lin_transf(im_ref, im_mov):
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
-    registration_method.SetShrinkFactorsPerLevel(shrinkFactors = [4,2,1])
-    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2,1,0])
+    registration_method.SetShrinkFactorsPerLevel(shrinkFactors = [4, 2, 1])
+    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     # Don't optimize in-place, we would possibly like to run this cell multiple times.
@@ -111,6 +117,7 @@ def est_lin_transf(im_ref, im_mov):
                                                   sitk.Cast(im_mov, sitk.sitkFloat32))
     return mov_resampled, final_transform
 
+
 def apply_lin_transf(im_ref, im_mov, lin_xfm):
     """
     Apply given linear transform `lin_xfm` to `im_mov` and return
@@ -121,12 +128,12 @@ def apply_lin_transf(im_ref, im_mov, lin_xfm):
 
     return mov_resampled
 
+
 if __name__ == '__main__':
-    ref_path = '/home/niels/Documents/hl2027_proj_2/common_img_mask/common_41_image.nii'
-    mov_path = '/home/niels/Documents/hl2027_proj_2/group_img/g5_65_image.nii'
+    ref_path = 'common_img_mask/common_41_image.nii'
+    mov_path = 'group_img/g5_65_image.nii'
     ref = sitk.ReadImage(ref_path, sitk.sitkFloat32)
     mov = sitk.ReadImage(mov_path, sitk.sitkFloat32)
-
 
     mov_init_resamp, lin_xfm = est_lin_transf(ref, mov)
 
