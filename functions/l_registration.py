@@ -55,7 +55,7 @@ def plot_values(registration_method):
 
     metric_values.append(registration_method.GetMetricValue())
     # Clear the output area (wait=True, to reduce flickering), and plot current data
-    # clear_output(wait=False)
+    clear_output(wait=False)
     # plt.clear()
     # Plot the similarity metric values
     plt.plot(metric_values, 'r')
@@ -77,12 +77,9 @@ def est_lin_transf(im_ref, im_mov):
     """
     Estimate linear transform to align `im_mov` to `im_ref` and
     return the transform parameters.
-    initial_transform = sitk.CenteredTransformInitializer(im_ref,
-    im_mov,
-    sitk.Euler3DTransform(),
-    sitk.CenteredTransformInitializerFilter.GEOMETRY)
-    """
 
+    """
+    initial_transform = sitk.CenteredTransformInitializer(im_ref, im_mov, sitk.Euler3DTransform(), sitk.CenteredTransformInitializerFilter.GEOMETRY)
     mov_resampled = sitk.Resample(im_mov, im_ref, initial_transform, sitk.sitkLinear, 0.0, im_mov.GetPixelID())
 
     registration_method = sitk.ImageRegistrationMethod()
@@ -130,15 +127,13 @@ def apply_lin_transf(im_ref, im_mov, lin_xfm):
 
 
 if __name__ == '__main__':
-    ref_path = 'common_img_mask/common_41_image.nii'
-    mov_path = 'group_img/g5_65_image.nii'
+    ref_path = '../common_img_mask/common_41_image.nii'
+    mov_path = '../group_img/g5_65_image.nii'
+
     ref = sitk.ReadImage(ref_path, sitk.sitkFloat32)
     mov = sitk.ReadImage(mov_path, sitk.sitkFloat32)
-<<<<<<< HEAD
     plt.figure()
     display_images(10, 10, sitk.GetArrayViewFromImage(ref), sitk.GetArrayViewFromImage(mov))
-=======
->>>>>>> 67b886a83d7df3c9a432dd6785cf00d5e427faa9
 
     mov_init_resamp, lin_xfm = est_lin_transf(ref, mov)
 
@@ -149,4 +144,3 @@ if __name__ == '__main__':
     display_images_with_alpha(100, 0.5, ref, mov_resampled)
     plt.figure()
     plt.show()
-    # display_images_with_alpha, image_z=(0,fixed_image.GetSize()[2]), alpha=(0.0,1.0,0.05), fixed = fixed(fixed_image), moving=fixed(mov_resampled)
