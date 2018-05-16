@@ -127,8 +127,8 @@ def apply_lin_transf(im_ref, im_mov, lin_xfm):
 
 
 if __name__ == '__main__':
-    ref_path = '../common_img_mask/common_41_image.nii'
-    mov_path = '../group_img/g5_65_image.nii'
+    ref_path = '/common_img_mask/common_41_image.nii'
+    mov_path = '/group_img/g5_65_image.nii'
 
     ref = sitk.ReadImage(ref_path, sitk.sitkFloat32)
     mov = sitk.ReadImage(mov_path, sitk.sitkFloat32)
