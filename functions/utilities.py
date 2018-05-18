@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from ipywidgets import interact, fixed
 from IPython.display import clear_output
+import SimpleITK as sitk
 
 def display_images(im_ref_z, im_mov_z, fixed_npa, moving_npa):
     # Create a figure with two subplots and the specified size.
@@ -68,3 +69,19 @@ def plot_values(registration_method):
 def update_multires_iterations():
     global metric_values, multires_iterations
     multires_iterations.append(len(metric_values))
+
+def get_binary_mask(mask):
+    mask = sitk.GetArrayFromImage(mask)
+    mask = mask != 10
+
+    mask = sitk.GetImageFromArray(mask.astype(float))
+
+    return sitk.Cast(mask, sitk.sitkFloat32)
+
+def scale_volume(vol, new_size):
+    new_spacing = [old_sz*old_spc/new_sz  for old_sz, old_spc, new_sz in zip(vol.GetSize(), vol.GetSpacing(), new_size)]
+
+    interpolator_type = sitk.sitkLinear
+
+    _new_vol = sitk.Resample(vol, new_size, sitk.Transform(), interpolator_type, vol.GetOrigin(), new_spacing, vol.GetDirection(), 0.0, vol.GetPixelIDValue())
+    return _new_vol

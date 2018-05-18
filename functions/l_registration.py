@@ -76,8 +76,8 @@ def est_lin_transf(im_ref, im_mov):
     """
     Estimate linear transform to align `im_mov` to `im_ref` and
     return the transform parameters.
-
     """
+
     initial_transform = sitk.CenteredTransformInitializer(im_ref, im_mov, sitk.Euler3DTransform(), sitk.CenteredTransformInitializerFilter.GEOMETRY)
     mov_resampled = sitk.Resample(im_mov, im_ref, initial_transform, sitk.sitkLinear, 0.0, im_mov.GetPixelID())
 
@@ -127,17 +127,11 @@ def apply_lin_transf(im_ref, im_mov, lin_xfm):
 
 if __name__ == '__main__':
     common_image = sitk.ReadImage("common_img_mask/common_40_image.nii", sitk.sitkFloat32)
-    mov_path = "group_img/g5_65_image.nii"
+    mov = sitk.ReadImage("group_img/g5_65_image.nii", sitk.sitkFloat32)
+    seg = sitk.ReadImage("group_img/g5_65_image_manual_seg.mhd", sitk.sitkFloat32)
 
-    mov = sitk.ReadImage(mov_path, sitk.sitkFloat32)
     # display_images(10, 10, sitk.GetArrayViewFromImage(ref), sitk.GetArrayViewFromImage(mov))
-    print(common_image)
-    print(mov)
     lin_xfm = est_lin_transf(common_image, mov)
-    mov_resampled = apply_lin_transf(common_image, mov, lin_xfm)
-    # plt.figure()
-    # display_images_with_alpha(100, 0.5, ref, mov_init_resamp)
-    # mov_resampled = apply_lin_transf(ref, mov, lin_xfm)
-    # plt.figure()
-    # display_images_with_alpha(100, 0.5, ref, mov_resampled)
-    # plt.show()
+    seg_resampled = apply_lin_transf(common_image, seg, lin_xfm)
+    plt.imshow(sitk.GetArrayViewFromImage(seg_resampled)[100,:,:])
+    plt.show()
