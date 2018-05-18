@@ -55,7 +55,8 @@ def plot_values(registration_method):
 
     metric_values.append(registration_method.GetMetricValue())
     # Clear the output area (wait=True, to reduce flickering), and plot current data
-    clear_output(wait=True)
+    clear_output(wait=False)
+    # plt.clear()
     # Plot the similarity metric values
     plt.plot(metric_values, 'r')
     plt.plot(multires_iterations, [metric_values[index] for index in multires_iterations], 'b*')
@@ -111,7 +112,7 @@ def est_lin_transf(im_ref, im_mov):
 
     final_transform = registration_method.Execute(sitk.Cast(im_ref, sitk.sitkFloat32),
                                                   sitk.Cast(im_mov, sitk.sitkFloat32))
-    return final_transform
+    return mov_resampled, final_transform
 
 
 def apply_lin_transf(im_ref, im_mov, lin_xfm):
@@ -126,18 +127,20 @@ def apply_lin_transf(im_ref, im_mov, lin_xfm):
 
 
 if __name__ == '__main__':
-    common_image = sitk.ReadImage("common_img_mask/common_40_image.nii", sitk.sitkFloat32)
-    mov_path = "group_img/g5_65_image.nii"
+    ref_path = '/common_img_mask/common_41_image.nii'
+    mov_path = '/group_img/g5_65_image.nii'
 
+    ref = sitk.ReadImage(ref_path, sitk.sitkFloat32)
     mov = sitk.ReadImage(mov_path, sitk.sitkFloat32)
-    # display_images(10, 10, sitk.GetArrayViewFromImage(ref), sitk.GetArrayViewFromImage(mov))
-    print(common_image)
-    print(mov)
-    lin_xfm = est_lin_transf(common_image, mov)
-    mov_resampled = apply_lin_transf(common_image, mov, lin_xfm)
-    # plt.figure()
-    # display_images_with_alpha(100, 0.5, ref, mov_init_resamp)
-    # mov_resampled = apply_lin_transf(ref, mov, lin_xfm)
-    # plt.figure()
-    # display_images_with_alpha(100, 0.5, ref, mov_resampled)
-    # plt.show()
+    plt.figure()
+    display_images(10, 10, sitk.GetArrayViewFromImage(ref), sitk.GetArrayViewFromImage(mov))
+
+    mov_init_resamp, lin_xfm = est_lin_transf(ref, mov)
+
+    plt.figure()
+    display_images_with_alpha(100, 0.5, ref, mov_init_resamp)
+    mov_resampled = apply_lin_transf(ref, mov, lin_xfm)
+    plt.figure()
+    display_images_with_alpha(100, 0.5, ref, mov_resampled)
+    plt.figure()
+    plt.show()
