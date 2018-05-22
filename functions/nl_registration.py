@@ -20,6 +20,7 @@ def est_nl_transf(im_ref, im_mov):
     # Regularization (update field - viscous, total field - elastic).
     initial_transform.SetSmoothingGaussianOnUpdate(varianceForUpdateField=0.0, varianceForTotalField=2.0)
 
+
     registration_method.SetInitialTransform(initial_transform)
 
     registration_method.SetMetricAsDemons(10) #intensities are equal if the difference is less than 10HU
@@ -66,17 +67,6 @@ if __name__ == '__main__':
     mov = sitk.ReadImage("group_img/g5_65_image.nii", sitk.sitkFloat32)
     seg = sitk.ReadImage("group_img/g5_65_image_manual_seg.mhd", sitk.sitkFloat32)
 
-    seg = seg < 10
-
     lin_xfm = est_lin_transf(common_image, mov)
     mov_resampled = apply_lin_transf(common_image, mov, lin_xfm)
-    nl_xfm = est_nl_transf(common_image, mov_resampled)
-    seg_resampled = apply_lin_transf(common_image, seg, lin_xfm)
-    seg_resampled = apply_nl_transf(common_image, seg_resampled, nl_xfm)
-
-    # plt.imshow(sitk.GetArrayViewFromImage(seg_resampled)[100, :, :])
-    # plt.show()
-    print(seg)
-    print(seg_resampled)
-    sitk.WriteImage(seg_resampled, 'test.nii')
-    sitk.WriteImage(seg, 'g5_65_image_manual_seg_binary.nii')
+    nl_xfm = demons_test(common_image, mov_resampled)
