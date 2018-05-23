@@ -22,20 +22,26 @@ def readLabelsAndFiles():
     test2 = sitk.ReadImage(test2_path, sitk.sitkFloat32)
     test3 = sitk.ReadImage(test3_path, sitk.sitkFloat32)
 
+    print(test1.GetSpacing())
+    print(test2.GetSpacing())
+    print(test3.GetSpacing())
+
     labels1 = np.zeros(vol1.GetSize()[2])
     labels2 = np.zeros(vol2.GetSize()[2])
     labels3 = np.zeros(vol3.GetSize()[2])
-    labels4 = np.zeros(vol1.GetSize()[2])
-    labels5 = np.zeros(vol2.GetSize()[2])
-    labels6 = np.zeros(vol3.GetSize()[2])
+    labels4 = np.zeros(test1.GetSize()[2])
+    labels5 = np.zeros(test2.GetSize()[2])
+    labels6 = np.zeros(test3.GetSize()[2])
 
+    # Group
     labels1[60:93] = 1
     labels2[64:102] = 1
     labels3[85:130] = 1
 
+    # common
     labels4[56:104] = 1
-    labels4[66:115] = 1
-    labels4[48:102] = 1
+    labels5[66:115] = 1
+    labels6[48:102] = 1
 
     vol1, vol2, vol3 = sitk.GetArrayFromImage(vol1), sitk.GetArrayFromImage(vol2), sitk.GetArrayFromImage(vol3)
     train = np.vstack((vol1, vol2, vol3))
@@ -45,7 +51,8 @@ def readLabelsAndFiles():
     train_labels = np.hstack((labels1, labels2, labels3))
     test_labels = np.hstack((labels4, labels5, labels6))
 
-    return train, train_labels, test, test_labels
+
+    return train, train_labels, test1, test2, test3, labels4, labels5, labels6
 
 
 if __name__ == '__main__':
