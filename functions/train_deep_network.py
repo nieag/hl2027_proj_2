@@ -169,13 +169,13 @@ def saveModel(model, history, name="simpleCNN"):
     print("Saved model to disk")
 
 
-def loadModel(name="simpleCNN"):
+def loadBestModel(name="simpleCNN"):
     json_file = open("functions/dnns/{}/model.json".format(name), 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
     # load weights into new model
-    loaded_model.load_weights("functions/dnns/bestWeights/weights.best.hdf")
+    loaded_model.load_weights("functions/dnns/BestNetwork/weights.best.hdf")
 
     loaded_model.compile(loss='categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
 
@@ -198,7 +198,7 @@ def evaluateModel(model, test_data, test_labels):
 
     print("Accuracy: {}".format(acc))
 
-    return test_pred == pred
+    return acc
 
 
 def makePrettyPlots(history):
@@ -248,7 +248,8 @@ def train_classifier(im_list, labels_list):
     x_train, x_valid, y_train, y_valid = preprocessData(np.array(im_list), np.array(labels_list))
 
     batch_size = 32
-    epochs = 30
+    epochs = 20
+
     input_shape = (x_train.shape[1], x_train.shape[2], 1)
 
     model = Sequential()
@@ -299,7 +300,7 @@ def train_classifier(im_list, labels_list):
     filepath = "functions/dnns/simpleCNN/weights.best.hdf"
     checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 
-    callbacks = [EarlyStopping(patience=10), checkpoint]
+    callbacks = [EarlyStopping(patience=5), checkpoint]
 
     hist = model.fit_generator(train_generator, nb_epoch=epochs, validation_data=valid_generator, callbacks=callbacks, shuffle=True)
 
@@ -323,7 +324,25 @@ def femur_head_selection(im, classifier):
 
     print(im[max_prob, :, :].shape)
 
-    return im[max_prob, :, :], probs
+    return max_prob
+
+
+def femur_head_prob(im, classifier):
+    """
+    Receive a CT image and the trained classifier. Returns the axial slice number with the maximum probability of containing a femur head.
+    """
+    im_ = np.array(im)
+    im_ = resizeData(im_)
+    im_, denom = normalizeData(im_)
+    im_ = im_.reshape(im_.shape[0], im_.shape[1], im_.shape[2], 1)
+
+    predictions = classifier.predict(im_)
+    probs = predictions[:, 1]
+    max_prob = np.argmax(probs)
+
+    print(im[max_prob, :, :].shape)
+
+    return im[max_prob, :, :], probs, max_prob
 
 
 if __name__ == '__main__':
@@ -332,11 +351,9 @@ if __name__ == '__main__':
     """
     print("loading data")
     data, labels, test1, test2, test3, test_labels1, test_labels2, test_labels3 = loadData()
-    #classifier, hist = train_classifier(data, labels)
 
-    #saveModel(classifier, hist)
-    classifier, hist = loadModel()
-    """
+    print(data.shape)
+
     test = np.vstack((test1, test2, test3))
     test = resizeData(test)
     test = test.reshape((test.shape[0], test.shape[1], test.shape[2], 1))
@@ -344,13 +361,17 @@ if __name__ == '__main__':
     test_labels = np.hstack((test_labels1, test_labels2, test_labels3))
     test_labels = keras.utils.to_categorical(test_labels, 2)
 
+    classifier, hist = loadBestModel()
 
-    evaluateModel(classifier, test, test_labels)
-    """
+    #classifier, hist = train_classifier(data, labels)
 
-    max_prob_slice1, probs1 = femur_head_selection(test1, classifier)
-    max_prob_slice2, probs2 = femur_head_selection(test2, classifier)
-    max_prob_slice3, probs3 = femur_head_selection(test3, classifier)
+    acc = evaluateModel(classifier, test, test_labels)
+
+    #saveModel(classifier, hist)
+
+    max_prob_slice1, probs1, no1 = femur_head_prob(test1, classifier)
+    max_prob_slice2, probs2, no2 = femur_head_prob(test2, classifier)
+    max_prob_slice3, probs3, no3 = femur_head_prob(test3, classifier)
 
     fig, ax = plt.subplots(figsize=(3, 5))
 
@@ -385,21 +406,27 @@ if __name__ == '__main__':
     plt.tight_layout()
     fig.savefig("slice-selected-and-pdf-test3.png")
 
-    fig, ax = plt.subplots(1, 3, figsize=(5, 3))
+    fig, ax = plt.subplots(1, 3, figsize=(6, 3))
 
     plt.subplot(1, 3, 1)
-    plt.imshow(max_prob_slice1, cmap="gray")
+    plt.imsave("common_image_40_slice{}.png".format(no1), max_prob_slice1, cmap="gray")
     plt.gca().set_xticklabels([''] * 10)
+    plt.gca().set_yticklabels([''] * 10)
+    plt.title("Common image 40")
 
     plt.subplot(1, 3, 2)
-    plt.imshow(max_prob_slice2, cmap="gray")
+    plt.imsave("common_image_41_slice{}.png".format(no2), max_prob_slice2, cmap="gray")
     plt.gca().set_xticklabels([''] * 10)
+    plt.gca().set_yticklabels([''] * 10)
+    plt.title("Common image 41")
 
     plt.subplot(1, 3, 3)
-    plt.imshow(max_prob_slice3, cmap="gray")
+    plt.imsave("common_image_42_slice{}.png".format(no3), max_prob_slice3, cmap="gray")
     plt.gca().set_xticklabels([''] * 10)
+    plt.gca().set_yticklabels([''] * 10)
+    plt.title("Common image 42")
 
-    fig.savefig("three-highest-probs.png")
+    plt.tight_layout()
 
 
 
