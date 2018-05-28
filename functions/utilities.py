@@ -45,7 +45,7 @@ def end_plot():
     del metric_values
     del multires_iterations
     # Close figure, we don't want to get a duplicate of the plot latter on.
-    # plt.close()
+    plt.close()
 
 
 # Callback invoked when the IterationEvent happens, update our data and display new figure.
@@ -63,25 +63,47 @@ def plot_values(registration_method):
     # plt.show()
     plt.pause(0.05)
 
-
 # Callback invoked when the sitkMultiResolutionIterationEvent happens, update the index into the
 # metric_values list.
 def update_multires_iterations():
     global metric_values, multires_iterations
     multires_iterations.append(len(metric_values))
 
-def get_binary_mask(mask):
+def get_binary_mask(mask, background_intensity=10):
+    """
+    Creates a binary mask from continous values.
+
+    Returns the binary mask.
+    """
     mask = sitk.GetArrayFromImage(mask)
-    mask = mask != 10
+    mask = mask != background_intensity
 
     mask = sitk.GetImageFromArray(mask.astype(float))
 
     return sitk.Cast(mask, sitk.sitkFloat32)
 
 def scale_volume(vol, new_size):
+    """
+    Re-scale given volume to "new_size".
+
+    Returns the re-scaled volume.
+    """
     new_spacing = [old_sz*old_spc/new_sz  for old_sz, old_spc, new_sz in zip(vol.GetSize(), vol.GetSpacing(), new_size)]
 
     interpolator_type = sitk.sitkLinear
 
     _new_vol = sitk.Resample(vol, new_size, sitk.Transform(), interpolator_type, vol.GetOrigin(), new_spacing, vol.GetDirection(), 0.0, vol.GetPixelIDValue())
     return _new_vol
+
+def extract_from_label(mask, labels):
+    """
+    Extracts part of a labelled mask.
+
+    Returns the mask according to requested labels.
+    """
+    extracted = 0
+
+    for label in labels:
+        extracted += mask == label
+
+    return extracted
